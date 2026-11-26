@@ -27,7 +27,7 @@ const NOCLIP_RADIUS = 14;
 const ARRIVAL_GRACE_MS = 500; // ignore no-clip triggers briefly after arriving, in case of overlap
 
 export class ExploreScene extends Phaser.Scene {
-  private data!: ExploreInitData;
+  private levelData!: ExploreInitData;
   private level!: GeneratedLevel;
   private player!: Player;
   private lighting!: LightingSystem;
@@ -39,14 +39,14 @@ export class ExploreScene extends Phaser.Scene {
 
   constructor() { super('Explore'); }
 
-  init(data: ExploreInitData): void {
-    this.data = data;
+  init(initData: ExploreInitData): void {
+    this.levelData = initData;
     this.transitioning = false;
     this.signLabels = [];
   }
 
   create(): void {
-    this.level = generateLevel(this.data.article, this.data.seed, this.data.hasForward);
+    this.level = generateLevel(this.levelData.article, this.levelData.seed, this.levelData.hasForward);
     this.renderMap(this.level);
 
     this.player = new Player(this, this.level.grid, this.level.spawn.x, this.level.spawn.y);
@@ -63,8 +63,8 @@ export class ExploreScene extends Phaser.Scene {
     this.keys = { ...kb.createCursorKeys(), ...(kb.addKeys('W,A,S,D') as { W: Key; A: Key; S: Key; D: Key }) };
 
     const style = { fontFamily: 'monospace', fontSize: '10px', color: '#c9c6a0' };
-    this.add.text(8, 6, `LEVEL: ${this.data.article.title}`, style).setScrollFactor(0).setDepth(DEPTH.hud);
-    if (this.data.article.offline) {
+    this.add.text(8, 6, `LEVEL: ${this.levelData.article.title}`, style).setScrollFactor(0).setDepth(DEPTH.hud);
+    if (this.levelData.article.offline) {
       this.add.text(8, 20, '(offline sample data)', { ...style, fontSize: '8px', color: '#6a6752' })
         .setScrollFactor(0).setDepth(DEPTH.hud);
     }
@@ -108,7 +108,7 @@ export class ExploreScene extends Phaser.Scene {
 
   private goBack(): void {
     this.transitioning = true;
-    const target = this.data.backTarget;
+    const target = this.levelData.backTarget;
     if (target === 'lobby') this.scene.start('Lobby');
     else this.scene.start('Explore', target);
   }
@@ -116,16 +116,16 @@ export class ExploreScene extends Phaser.Scene {
   private async goForward(): Promise<void> {
     this.transitioning = true;
     this.status.setText('No-clipping...');
-    const nextTitle = this.data.article.links.find(l => l !== this.data.article.title) ?? this.data.article.title;
+    const nextTitle = this.levelData.article.links.find(l => l !== this.levelData.article.title) ?? this.levelData.article.title;
     try {
       const nextArticle = await fetchArticle(nextTitle);
-      const nextDepth = this.data.depth + 1;
+      const nextDepth = this.levelData.depth + 1;
       const nextData: ExploreInitData = {
         article: nextArticle,
         seed: seedFor(nextArticle),
         depth: nextDepth,
         hasForward: nextDepth < MAX_CHAIN_DEPTH && nextArticle.links.some(l => l !== nextArticle.title),
-        backTarget: this.data,
+        backTarget: this.levelData,
       };
       this.scene.start('Explore', nextData);
     } catch {
