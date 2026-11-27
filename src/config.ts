@@ -1,8 +1,10 @@
 export const TILE = 32;
 export const VIEW_W = 640;
 export const VIEW_H = 360;
-export const PLAYER_SPEED = 72; // px/s
-export const PLAYER_LIGHT_RADIUS = 96; // weak starter light; later driven by equipment
+export const PLAYER_SPEED = 94; // px/s
+export const PLAYER_LIGHT_RADIUS = 64; // weak starter light; later driven by equipment
+export const LAMP_RADIUS = 110; // fixed ceiling lamps (Lobby and Levels)
+export const TERMINAL_GLOW_RADIUS = 60;
 export const DEPTH = { lamps: 1000, darkness: 2000, hud: 3000 };
 
 // --- Wikipedia / Level generation (Phase 2) -------------------------------------------
