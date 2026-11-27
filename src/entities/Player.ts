@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { PLAYER_SPEED } from '../config';
-import { TileGrid } from '../world/lobby';
+import { SolidGrid } from '../world/solidGrid';
 
 type Dir = 'down' | 'up' | 'left' | 'right';
 
@@ -12,7 +12,7 @@ export class Player {
   private dir: Dir = 'down';
   private walkT = 0;
 
-  constructor(scene: Phaser.Scene, private grid: TileGrid, x: number, y: number) {
+  constructor(scene: Phaser.Scene, private grid: SolidGrid, x: number, y: number) {
     this.x = x; this.y = y;
     this.sprite = scene.add.sprite(x, y, 'player', 'down_0').setOrigin(0.5, 28 / 32);
   }
