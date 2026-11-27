@@ -4,6 +4,7 @@ import { TileGrid, LOBBY_ROWS } from '../world/lobby';
 import { findMarker } from '../world/markers';
 import { LightingSystem } from '../systems/lighting';
 import { Player } from '../entities/Player';
+import { TouchControls, isTouch } from '../systems/touchControls';
 import { loadJSON, saveJSON } from '../systems/storage';
 import { fetchArticle } from '../net/wikipedia';
 import { ExploreInitData, seedFor } from './ExploreScene';
@@ -18,6 +19,7 @@ const NOCLIP_RADIUS = 14;
 export class LobbyScene extends Phaser.Scene {
   private player!: Player;
   private lighting!: LightingSystem;
+  private touch!: TouchControls;
   private keys!: Phaser.Types.Input.Keyboard.CursorKeys & { W: Key; A: Key; S: Key; D: Key };
   private hint!: Phaser.GameObjects.Text;
   private hintFading = false;
@@ -35,7 +37,8 @@ export class LobbyScene extends Phaser.Scene {
 
     // Resume where the player left off, if a save exists and looks valid; otherwise spawn normally.
     const saved = loadJSON<PlayerSave>(SAVE_KEY, { version: SAVE_VERSION, x: grid.spawn.x, y: grid.spawn.y });
-    const start = saved.version === SAVE_VERSION && !grid.isSolidPx(saved.x, saved.y) ? saved : grid.spawn;
+    const nearNoclip = !!this.noclipSpot && Math.hypot(saved.x - this.noclipSpot.x, saved.y - this.noclipSpot.y) < TILE * 1.5;
+    const start = saved.version === SAVE_VERSION && !grid.isSolidPx(saved.x, saved.y) && !nearNoclip ? saved : grid.spawn;
 
     this.player = new Player(this, grid, start.x, start.y);
     this.lighting = new LightingSystem(this, grid);
@@ -49,10 +52,11 @@ export class LobbyScene extends Phaser.Scene {
 
     const kb = this.input.keyboard!;
     this.keys = { ...kb.createCursorKeys(), ...(kb.addKeys('W,A,S,D') as { W: Key; A: Key; S: Key; D: Key }) };
+    this.touch = new TouchControls(this);
 
     const style = { fontFamily: 'monospace', fontSize: '10px', color: '#c9c6a0' };
     this.add.text(8, 6, 'LOBBY', style).setScrollFactor(0).setDepth(DEPTH.hud);
-    this.hint = this.add.text(8, 346, 'WASD / arrow keys to move', { ...style, color: '#8d8a72' }).setScrollFactor(0).setDepth(DEPTH.hud);
+    this.hint = this.add.text(8, 346, isTouch(this) ? 'Drag to move' : 'WASD / arrow keys to move', { ...style, color: '#8d8a72' }).setScrollFactor(0).setDepth(DEPTH.hud);
     this.status = this.add.text(8, 334, '', { ...style, color: '#b7a8c9' }).setScrollFactor(0).setDepth(DEPTH.hud);
 
     // Autosave periodically, and on tab hide / close, so progress survives a reload.
@@ -76,8 +80,9 @@ export class LobbyScene extends Phaser.Scene {
     if (this.transitioning) return;
     const dt = Math.min(delta / 1000, 0.05);
     const k = this.keys;
-    const ix = (k.D.isDown || k.right.isDown ? 1 : 0) - (k.A.isDown || k.left.isDown ? 1 : 0);
-    const iy = (k.S.isDown || k.down.isDown ? 1 : 0) - (k.W.isDown || k.up.isDown ? 1 : 0);
+    let ix = (k.D.isDown || k.right.isDown ? 1 : 0) - (k.A.isDown || k.left.isDown ? 1 : 0);
+    let iy = (k.S.isDown || k.down.isDown ? 1 : 0) - (k.W.isDown || k.up.isDown ? 1 : 0);
+    if (!ix && !iy) { ix = this.touch.x; iy = this.touch.y; } // touch joystick when no keys held
     this.player.update(dt, ix, iy);
     if ((ix || iy) && !this.hintFading) {
       this.hintFading = true;
