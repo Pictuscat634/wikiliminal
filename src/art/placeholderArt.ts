@@ -6,7 +6,7 @@ import { mulberry32 } from '../systems/rng';
  * All art is generated here as placeholder pixel art. To replace it, load real images in
  * BootScene.preload() under the same texture keys: floor0-2, wall_front, wall_top, terminal, lamp,
  * noclip, and 'player' (frames down_0, down_1, up_0 ... right_1). Levels generated with a
- * non-default palette (see world/levelgen.ts) look for 'aqua_floor0' etc. the same way.
+ * non-default palette (see world/infiniteLevel.ts) look for 'aqua_floor0' etc. the same way.
  */
 type Ctx = CanvasRenderingContext2D;
 const rect = (c: Ctx, col: string, x: number, y: number, w: number, h: number) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
@@ -53,7 +53,7 @@ const DEFAULT_PALETTE: ArtPalette = {
   wallBaseboard: '#46524a', wallBaseboardDark: '#2f3832', wallTopBase: '#3b453e', wallTopInner: '#4a564c',
 };
 
-// Levels whose article leans toward water/ocean subjects (see levelgen.ts's palette pick).
+// Levels whose article leans toward water/ocean subjects (see infiniteLevel.ts's palette pick).
 const AQUA_PALETTE: ArtPalette = {
   floors: ['#4d6b76', '#4a6670', '#51707a'],
   floorGrout: '#334a52', floorHighlight: '#6b8e98', floorSpeckleA: '#3e5862', floorSpeckleB: '#5c7e88',
