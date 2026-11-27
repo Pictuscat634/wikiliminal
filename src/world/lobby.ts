@@ -1,4 +1,5 @@
-import { TILE } from '../config';
+import { TILE, LAMP_RADIUS, TERMINAL_GLOW_RADIUS } from '../config';
+import { SolidGrid } from './solidGrid';
 
 /** Legend: '#' wall, '.' floor, ' ' void, 'L' floor + ceiling lamp, 'P' spawn, 'T' terminal (solid). */
 const A = '.........', B = '..........';
@@ -14,13 +15,13 @@ const south = ' '.repeat(9) + '#' + '.'.repeat(12) + '#' + ' '.repeat(9);
 export const LOBBY_ROWS: string[] = [
   '#'.repeat(32),
   room,
-  put(room, { 5: 'L', 16: 'L', 26: 'L' }),
+  put(room, { 5: 'L', 16: 'L' }),
   hall,
   room,
   room,
   '#'.repeat(5) + '.' + '#'.repeat(9) + '.' + '#'.repeat(10) + '.' + '#'.repeat(5),
   hall,
-  put(hall, { 5: 'L', 15: 'L', 26: 'L' }),
+  put(hall, { 5: 'L', 15: 'L' }),
   hall,
   hall,
   '#'.repeat(15) + '..' + '#'.repeat(15),
@@ -33,7 +34,7 @@ export const LOBBY_ROWS: string[] = [
 
 export interface LightDef { x: number; y: number; radius: number; flicker: boolean }
 
-export class TileGrid {
+export class TileGrid implements SolidGrid {
   readonly w: number;
   readonly h: number;
   readonly lights: LightDef[] = [];
@@ -50,13 +51,13 @@ export class TileGrid {
         const c = this.cells[ty][tx];
         const cx = (tx + 0.5) * TILE;
         if (c === 'L') {
-          this.lights.push({ x: cx, y: (ty + 0.5) * TILE, radius: 160, flicker: (tx + ty) % 4 === 0 });
+          this.lights.push({ x: cx, y: (ty + 0.5) * TILE, radius: LAMP_RADIUS, flicker: (tx + ty) % 4 === 0 });
           this.lamps.push({ x: cx, y: (ty + 0.5) * TILE - 6 });
         } else if (c === 'P') {
           this.spawn = { x: cx, y: (ty + 1) * TILE - 6 };
         } else if (c === 'T') {
           // Glow sits in the tile north of the terminal so the ray origin is never inside a solid tile.
-          this.lights.push({ x: cx, y: ty * TILE - 8, radius: 80, flicker: true });
+          this.lights.push({ x: cx, y: ty * TILE - 8, radius: TERMINAL_GLOW_RADIUS, flicker: true });
         }
       }
     }
